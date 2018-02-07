@@ -1,0 +1,77 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Xvector = source(line,"Xvector.txt",",",type( (double,long) ));
+Yvector = source(line,"Yvector.txt",",",type( (double,long) ));
+Xmatrix = source(line,"Xmatrix.txt",",",type( (double,long,long) ));
+Ymatrix = source(line,"Ymatrix.txt",",",type( (double,long,long) ));
+
+
+// inner product:
+
+sum(select v*w
+      from (v,i) in Xvector,
+           (w,i) in Yvector);
+
+// matrix addition:
+
+select ( x+y, i, j )
+  from (x,i,j) in Xmatrix,
+       (y,i,j) in Ymatrix;
+
+// matrix transpose:
+
+macro transpose ( X ) {
+  select (x,j,i)
+    from (x,i,j) in X
+};
+
+transpose(Xmatrix);
+
+// map to a vector:
+
+select (sum(x),i)
+  from (x,i,j) in Xmatrix
+ group by i;
+
+// matrix multiplication #1:
+
+macro multiply ( X, Y ) {
+  select (sum(z),i,j)
+    from (x,i,k) in X, (y,k,j) in Y, z = x*y
+   group by (i,j)
+};
+
+multiply(Xmatrix,transpose(Ymatrix));
+
+// matrix multiplication #2:
+
+select (sum(select p.x*p.y from p in partition),i,j)
+  from (x,i,k) in Xmatrix,
+       (y,k,j) in Ymatrix
+ group by (i,j);
+
+// matrix-vector product:
+
+macro MVprod ( M, V ) {
+  select ( sum(z), i )
+    from (m,i,j) in M, (v,j) in V, z = m*v
+   group by i
+};
+
+MVprod(Xmatrix,Xvector);

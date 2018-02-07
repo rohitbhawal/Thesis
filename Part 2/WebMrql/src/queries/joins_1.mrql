@@ -1,0 +1,64 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+E = source(line,"employee.txt",",",type(<name:string,dno:int,address:string>));
+D = source(line,"department.txt",",",type(<name:string,dno:int>));
+
+select e.name from e in E where e.dno=10;
+
+sum(select e.dno from e in E);
+
+select n from <dno:10,name:n> in E;
+
+select e.dno+11 from e in E;
+
+select (e.name,d.name) from e in E, d in D where e.dno=d.dno;
+
+select (e.name,d.name) from e in E, d in D where e.dno=d.dno and e.name="John Smith";
+
+select (e.name,d.name) from e in E, d in D where e.dno=d.dno and e.name="John Smith" and d.name="CSE";
+
+select d.name from d in D where all e in (select e from e in E where e.dno=d.dno): e.address="a";
+
+select d.name from d in D where all(select e.address="a" from e in E where e.dno=d.dno);
+
+select e from e in E order by inv(e.dno);
+
+select e from e in E order by e.address;
+
+select (e.name,d.name) from e in E, d in D where e.dno=d.dno order by e.address;
+
+select (k,e) from e in E group by k: e.dno;
+
+(select (k,e) from e in E group by k: e.dno order by k)[1];
+
+(select (k,e) from e in E group by k: e.dno)[10];
+
+(select e from e in E order by e.dno, e.name)[1:2];
+
+select (k,e) from e in E group by k: e.dno order by inv(k);
+
+select (k,count(e)) from e in E group by k: e.dno order by count(e);
+
+all e in E: e.dno > 1;
+
+(select e.dno from e in E)+{9,8};
+
+(select e.dno from e in E order by e.name)+[9,8];
+
+count((select e.dno from e in E)+{9,8}+(select e.dno from e in E));

@@ -1,0 +1,129 @@
+<link rel="stylesheet" href="{{ url_for('static', filename = 'css/bootstrap-multiselect.css')}}" />
+<script src="/vendor/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
+
+<form id="multiselectForm" method="post" class="form-horizontal">
+    <div class="form-group">
+        <label class="col-xs-3 control-label">Gender</label>
+        <div class="col-xs-5">
+            <select class="form-control" name="gender">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-3 control-label">Browser</label>
+        <div class="col-xs-5">
+            <select class="form-control" name="browsers" multiple>
+                <option value="chrome">Google Chrome</option>
+                <option value="firefox">Firefox</option>
+                <option value="ie">IE</option>
+                <option value="safari">Safari</option>
+                <option value="opera">Opera</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-xs-5 col-xs-offset-3">
+            <button type="submit" class="btn btn-default">Validate</button>
+        </div>
+    </div>
+</form>
+
+<script>
+$(document).ready(function() {
+    // You don't need to care about onDropdownShow, onDropdownHide options
+    // and adjustByScrollHeight(), adjustByHeight() methods
+    // They are for this specific demo
+    $('#multiselectForm')
+        .formValidation({
+            framework: 'bootstrap',
+            // Exclude only disabled fields
+            // The invisible fields set by Bootstrap Multiselect must be validated
+            excluded: ':disabled',
+            icon: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+                gender: {
+                    validators: {
+                        notEmpty: {
+                            message: 'The gender is required'
+                        }
+                    }
+                },
+                browsers: {
+                    validators: {
+                        callback: {
+                            message: 'Please choose 2-3 browsers you use for developing',
+                            callback: function(value, validator, $field) {
+                                // Get the selected options
+                                var options = validator.getFieldElements('browsers').val();
+                                return (options != null
+                                        && options.length >= 2 && options.length <= 3);
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        .find('[name="gender"]')
+            .multiselect({
+                onChange: function(element, checked) {
+                    $('#multiselectForm').formValidation('revalidateField', 'gender');
+
+                    adjustByScrollHeight();
+                },
+                onDropdownShown: function(e) {
+                    adjustByScrollHeight();
+                },
+                onDropdownHidden: function(e) {
+                    adjustByHeight();
+                }
+            })
+            .end()
+        .find('[name="browsers"]')
+            .multiselect({
+                enableFiltering: true,
+                includeSelectAllOption: true,
+                // Re-validate the multiselect field when it is changed
+                onChange: function(element, checked) {
+                    $('#multiselectForm').formValidation('revalidateField', 'browsers');
+
+                    adjustByScrollHeight();
+                },
+                onDropdownShown: function(e) {
+                    adjustByScrollHeight();
+                },
+                onDropdownHidden: function(e) {
+                    adjustByHeight();
+                }
+            })
+            .end();
+
+    // You don't need to care about these methods
+    function adjustByHeight() {
+        var $body   = $('body'),
+            $iframe = $body.data('iframe.fv');
+        if ($iframe) {
+            // Adjust the height of iframe when hiding the picker
+            $iframe.height($body.height());
+        }
+    }
+
+    function adjustByScrollHeight() {
+        var $body   = $('body'),
+            $iframe = $body.data('iframe.fv');
+        if ($iframe) {
+            // Adjust the height of iframe when showing the picker
+            $iframe.height($body.get(0).scrollHeight);
+        }
+    }
+});
+</script>

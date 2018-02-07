@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="utf-8">
+	<title>SkYNeT-MRQL System</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	{% if not session.logged_in %}
+		<meta http-equiv="refresh" content="2; URL={{subURL}}/login/">
+		<meta name="keywords" content="automatic redirection">
+	{% endif %}
+	
+	<link rel="stylesheet" href="{{ url_for('static', filename = 'css/bootstrap.min.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename = 'r2d2.ico') }}">
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/i18n/defaults-*.min.js"></script> -->
+
+	<link rel="stylesheet" href="{{ url_for('static', filename = 'css/bootstrap-multiselect.css')}}" type="text/css"/>	
+	<script src="{{ url_for('static', filename = 'js/upload.js')}}"></script>
+  </head>
+  <body>
+	 <div class="container">
+		 <br>
+		 <br>
+		 <h1>Welcome {{Uname}} !</h1>
+		 <h4 align="Right"><a href="{{subURL}}/logout"><input class="btn btn-default" type="submit" name="logout"  value="Logout"></a></h4>
+		 <br>
+		 <div class="dropdown">	 	 
+		  <label for="exampleInputFile">Select Sample Query: </label><button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">{{selectQuery}}
+		  <span class="caret"></span></button>
+		  <ul class="dropdown-menu">
+			  {% for l in range(queryList|count) %}
+			  <li><a href="{{subURL}}/upload/?Uname={{Uname}}&selectQuery={{queryList[l]}}">{{queryList[l]}}</a></li>	
+			  {% endfor %}
+		  </ul>
+		</div>	 
+		<br>
+		<div class="form-group" >
+			<form action="" class="form-inline" method="post" enctype="multipart/form-data">
+				<textarea id="query_id" class="form-control" type ="text" placeholder="Query" name= "query" id="query_txt" rows="10" cols="100" data-toggle="tooltip" title="For source as Data Files only give file names !">{{query}}</textarea> 
+				<input class="btn btn-info" type="button" onclick=clearQuery(query.id) name="Clear" value="Clear" >
+				<br>
+				<label for="exampleInputFile">Select Data Files from Local:</label><input type="file" name="dataFile[]" multiple="">
+				<br>
+				<div>	
+				  <label for="exampleInputFile">Select Available Sample Query Data Files from Server: </label>
+				  <select class="selectpicker" multiple data-live-search="true" data-actions-box="true" name="dataChoice[]" data-style="btn-primary">
+					  <optgroup label="Preloaded Data Files">
+					  {% for l in range(dataList|count) %}
+			  				<option data-tokens={{dataList[l]}}>{{dataList[l]}}</option>
+			  		  {% endfor %}
+			  		  </optgroup>  
+		  		  </select>
+		  		  {% if userdataList|count > 0 %}
+		  		  <br>
+		  		  <br>
+		  		  <label for="exampleInputFile">User Uploaded Data Files on Server: </label>
+		  		  <select class="selectpicker" multiple data-live-search="true" data-actions-box="true" name="UserDataChoice[]" data-style="btn-primary">
+			  		  	  <optgroup label="User Uploaded Data Files">
+						  {% for l in range(userdataList|count) %}
+						  	<option data-tokens={{userdataList[l]}}>{{userdataList[l]}}</option>
+					  	  {% endfor %}
+					  	  </optgroup>
+				  </select>
+				  {% endif %}
+				</div>		
+				
+				
+				<br>
+				<label for="exampleInputFile">Choose Run Mode: </label>
+				<div>
+				<select name="run_type" class="selectpicker" data-style="btn-primary">
+					{% if runT == 'mapreduce' %}
+						<option value="mapreduce" selected="selected">MapReduce</option>
+					{% else %}
+						<option value="mapreduce" >MapReduce</option>
+					{% endif %}
+					{% if runT == 'spark' %}
+						<option value="spark" selected="selected">Spark</option>
+					{% else %}
+						<option value="spark">Spark</option>
+					{% endif %}
+				</select>
+				<select id="run_modeid" name="run_mode" onchange=disableMenu(run_mode.value,nodes.id) class="selectpicker" data-style="btn-primary"  >
+					{% if runM == 'memory' %}
+						<option value="memory" selected="selected">Memory</option>
+					{% else %}
+						<option value="memory" >Memory</option>
+					{% endif %}
+					{% if runM == 'local' %}
+						<option value="local" selected="selected">Local</option>
+					{% else %}
+						<option value="local">Local</option>
+					{% endif %}
+					{% if runM == 'distributed' %}
+						<option value="distributed" selected="selected">Distributed</option>
+					{% else %}
+						<option value="distributed">Distributed</option>
+					{% endif %}
+				</select>
+				<select id="nodes_menu" name="nodes" class="selectpicker" data-style="btn-primary" disabled>
+				{% for num in range(2,9) %}
+					{% if nodes == num|string %}
+						<option value="{{num}}" selected="selected">{{num}}</option>
+					{% else %}
+						<option value="{{num}}" >{{num}}</option>
+					{% endif %}
+				{% endfor %}
+				</select>
+				<br>
+				<br>
+				<select name="opt_mode" class="selectpicker" data-style="btn-primary">
+					{% if optM == '' %}
+						<option value="" selected="selected">Optional(No Selection)</option>
+					{% else %}
+						<option value="" >Optional(No Selection)</option>
+					{% endif %}
+					{% if optM == 'trace' %}
+						<option value="trace" selected="selected">Trace</option>
+					{% else %}
+						<option value="trace" >Trace</option>
+					{% endif %}
+					{% if optM == 'info' %}
+						<option value="info" selected="selected">Info</option>
+					{% else %}
+						<option value="info">Info</option>
+					{% endif %}
+				</select>
+				</div>
+				<br>
+				<br>
+				<input class="btn btn-success" onclick=checkForDistMode() type="submit" name="submit" value="Submit">
+				{% for i in range(5) %} &nbsp {% endfor %}<input id="loadPrevSession" class="btn btn-info" type="submit" name="loadPrevSession" value="Load Previous Session">
+				{% if jsonKeys|count > 0 %}
+				<br>
+				<br>
+				<div>
+				<label>Select X-Axis: </label>
+				<select name="x_axis" class="selectpicker" data-style="btn-primary">
+				{% for l in range(jsonKeys|count) %}   
+							<option value={{jsonKeys[l]}}>{{jsonKeys[l]}}</option>
+				{% endfor %}		
+				</select>
+				<label>Select Y-Axis: </label>
+				<select name="y_axis" class="selectpicker" data-style="btn-primary">
+				{% for l in range(jsonKeys|count) %}   
+							<option value={{jsonKeys[l]}}>{{jsonKeys[l]}}</option>
+				{% endfor %}		
+				</select>
+				<input class="btn btn-success" type="submit" name="visualize" value="Visualize">
+				</div>
+				{% endif %}	
+			</form>
+		</div>
+		<div class="form-group">
+			<form action="" class="form-inline">
+				<textarea class="form-control" placeholder="Result" name= "result" id="result" rows="10" cols="100">{{result}}</textarea>
+				<input class="btn btn-info" type="button" onclick=clearQuery(result.id) name="Clear" value="Clear" >
+			</form>
+		</div>
+	</div>
+  </body>
+</html>  

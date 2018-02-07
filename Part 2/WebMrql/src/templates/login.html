@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="utf-8">
+	<title>SkYNeT-MRQL System</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="{{ url_for('static', filename = 'css/bootstrap.min.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename = 'r2d2.ico') }}">
+	{% if session.logged_in %}
+		<meta http-equiv="refresh" content="2; URL={{subURL}}/upload/?Uname={{session.username}}">
+		<meta name="keywords" content="automatic redirection">
+	{% endif %}
+  </head>  
+<body>
+	{% if session.logged_in %}
+		<div class="alert alert-success">
+			<a href="" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+			<p align="center"><strong>You are Already Logged In as {{session.username}}</strong></p>
+		</div>
+		<p align="center">If your browser doesn't automatically redirect within a few seconds, you can <a id="redirect" href="{{subURL}}/upload/?Uname={{session.username}}" ><ins><b>click here</b></ins></a></p>
+	{% else %}
+	<div class="container">
+		<br>
+		<h4>Please Login:</h4>
+		<br>
+		<form action="" class="form-inline" method="post">
+			<input type="text" class="form-control" placeholder = "Username" name="username" value="{{request.form.username}}">
+			<input type="password" class="form-control" placeholder = "Password" name="password" value="{{request.form.password}}">
+			<input class="btn btn-default" type="submit" value="Login">
+		</form>
+		<br><br>
+		{% if error != '' %}
+		<div class="alert alert-danger">
+			<a href="" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+			<strong>{{error}}</strong>
+		</div>
+		{% endif %}
+	</div>
+	{% endif %}
+</body>
+</html>

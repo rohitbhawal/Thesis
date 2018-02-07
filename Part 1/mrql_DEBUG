@@ -1,0 +1,61 @@
+#!/bin/bash
+#--------------------------------------------------------------------------------
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+#--------------------------------------------------------------------------------
+#
+# run Apache MRQL in Apache Hadoop Map-Reduce mode
+#
+#--------------------------------------------------------------------------------
+
+MRQL_HOME="$(cd `dirname $0`/..; pwd -P)"
+
+. "$MRQL_HOME/conf/mrql-env.sh"
+
+GEN_JAR=`ls "$MRQL_HOME"/lib/mrql-gen-*.jar`
+CORE_JAR=`ls "$MRQL_HOME"/lib/mrql-core-*.jar`
+MRQL_JAR=`ls "$MRQL_HOME"/lib/mrql-mr-*.jar`
+FULL_JAR="/tmp/${USER}_mrql_mr.jar"
+CLASS_DIR="/tmp/${USER}_mrql_classes"
+
+export JAVA_HOME MAPRED_JOB_TRACKER FS_DEFAULT_NAME
+
+if [[ ($MRQL_JAR -nt $FULL_JAR) ]]; then
+   rm -rf $CLASS_DIR
+   mkdir -p $CLASS_DIR
+   pushd $CLASS_DIR > /dev/null
+   $JAVA_HOME/bin/jar xf $CUP_JAR
+   $JAVA_HOME/bin/jar xf $JLINE_JAR
+   $JAVA_HOME/bin/jar xf $GEN_JAR
+   $JAVA_HOME/bin/jar xf $CORE_JAR
+   $JAVA_HOME/bin/jar xf $MRQL_JAR
+   cd ..
+   $JAVA_HOME/bin/jar cf $FULL_JAR -C $CLASS_DIR .
+   popd > /dev/null
+fi
+
+if [ "$1" == "-local" ] || [ "$1" == "-dist" ]; then
+    if [ "$HADOOP_CONFIG" == "" ]; then
+        $HADOOP_HOME/bin/hadoop jar $FULL_JAR org.apache.mrql.Main $*
+    else
+        $HADOOP_HOME/bin/hadoop --config $HADOOP_CONFIG jar $FULL_JAR org.apache.mrql.Main $*
+    fi
+else
+   $JAVA_HOME/bin/java -classpath "$FULL_JAR:$HADOOP_JARS" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9870 org.apache.mrql.Main $*
+fi
